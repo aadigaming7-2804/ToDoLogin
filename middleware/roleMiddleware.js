@@ -8,4 +8,4 @@ function permitRoles(...allowedRoles) {
   };
 }
 
-module.exports = permitRoles;
+module.exports = permitRoles; 
