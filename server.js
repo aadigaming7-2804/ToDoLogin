@@ -10,11 +10,12 @@ const todoRoutes = require('./routes/todoRoutes');
 const profileRoutes = require('./routes/profileRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 
+
 const app = express();
 const port = 4000;
 
 app.use(bodyParser.json());
-
+app.use('/admin', adminRoutes);
 // Mount routes
 app.use('/auth', authRoutes);
 app.use('/todos', todoRoutes);
