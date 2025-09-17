@@ -1,5 +1,6 @@
+require('dotenv').config();
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = "mysecretkey"; // Hardcoded for now
+const JWT_SECRET = process.env.JWT_SECRET;
 
 function authMiddleware(req, res, next) {
   const token = req.headers['authorization'];
@@ -7,7 +8,7 @@ function authMiddleware(req, res, next) {
 
   try {
     const decoded = jwt.verify(token.replace("Bearer ", ""), JWT_SECRET);
-    req.user = decoded; // store user info in request
+    req.user = decoded;
     next();
   } catch (err) {
     res.status(400).json({ error: "Invalid token" });
