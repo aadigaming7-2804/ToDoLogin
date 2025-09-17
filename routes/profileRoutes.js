@@ -1,11 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const bcrypt = require('bcryptjs'); //  added
+const bcrypt = require('bcryptjs');
 const authMiddleware = require('../middleware/authMiddleware');
 const PasswordResetRequest = require('../models/PasswordResetRequest');
 const User = require('../models/User');
+const { upload } = require('../config/cloudinary'); // multer-storage-cloudinary setup
 
-//  Request admin approval for password reset
+// -------------------------------
+// Request admin approval for password reset
+// -------------------------------
 router.post('/request-reset', authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id;
@@ -25,7 +28,9 @@ router.post('/request-reset', authMiddleware, async (req, res) => {
   }
 });
 
-//  Reset password after admin approval
+// -------------------------------
+// Reset password after admin approval
+// -------------------------------
 router.post('/reset-password', authMiddleware, async (req, res) => {
   try {
     const { newPassword } = req.body;
@@ -39,12 +44,11 @@ router.post('/reset-password', authMiddleware, async (req, res) => {
       return res.status(400).json({ message: "Reset not approved by admin yet" });
     }
 
-    user.password = newPassword;   // plain text
+    user.password = newPassword; // will be hashed via pre('save') in User model
     user.approvedForReset = false;
-    await user.save();              // pre('save') will hash it
+    await user.save();
 
-
-    await PasswordResetRequest.deleteMany({ userId: user._id }); //  cleanup requests
+    await PasswordResetRequest.deleteMany({ userId: user._id }); // cleanup requests
 
     res.json({ message: "Password updated successfully" });
   } catch (err) {
@@ -52,7 +56,10 @@ router.post('/reset-password', authMiddleware, async (req, res) => {
     res.status(500).json({ message: "Server error", error: err.message });
   }
 });
+
+// -------------------------------
 // Get logged-in user's profile
+// -------------------------------
 router.get('/', authMiddleware, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password'); // exclude password
@@ -62,4 +69,32 @@ router.get('/', authMiddleware, async (req, res) => {
     res.status(500).json({ message: "Server error", error: err.message });
   }
 });
+
+// -------------------------------
+// Upload profile image (Cloudinary)
+// -------------------------------
+router.post('/upload-profile', authMiddleware, upload.single('image'), async (req, res) => {
+  try {
+    //  Add these for debugging
+    console.log('req.file:', req.file);
+    console.log('req.body:', req.body);
+
+    if (!req.file) {
+      return res.status(400).json({ message: 'No image file uploaded' });
+    }
+
+    // req.file.path is already the Cloudinary URL
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { profileImage: req.file.path },
+      { new: true }
+    ).select('-password');
+
+    res.json({ message: 'Profile image uploaded successfully', user });
+  } catch (err) {
+    console.error('upload-profile error:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
 module.exports = router;
