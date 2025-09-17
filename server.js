@@ -1,3 +1,4 @@
+require('dotenv').config();            // Load .env variables
 const express = require('express');
 const bodyParser = require('body-parser');
 
@@ -10,12 +11,11 @@ const todoRoutes = require('./routes/todoRoutes');
 const profileRoutes = require('./routes/profileRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 
-
 const app = express();
-const port = 4000;
+const port = process.env.PORT || 4000;  // Use port from .env
 
 app.use(bodyParser.json());
-app.use('/admin', adminRoutes);
+
 // Mount routes
 app.use('/auth', authRoutes);
 app.use('/todos', todoRoutes);
@@ -25,3 +25,4 @@ app.use('/admin', adminRoutes);
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });
+
