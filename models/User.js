@@ -6,6 +6,7 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   role: { type: String, enum: ['user', 'admin'], default: 'user' },
+  profileImage: { type: String, default: null }, // ✅ NEW FIELD for Cloudinary URL
   passwordResetRequest: { type: Boolean, default: false },
   approvedForReset: { type: Boolean, default: false }
 });
@@ -21,3 +22,6 @@ userSchema.pre('save', async function (next) {
     next(err);
   }
 });
+
+const User = mongoose.models.User || mongoose.model('User', userSchema);
+module.exports = User;
